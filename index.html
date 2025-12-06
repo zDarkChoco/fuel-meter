@@ -6,15 +6,15 @@
     <title>Gen-2 Dash</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     
-    <style>
+                <style>
         :root {
             --bg-color: #0a0a0a;
-            --card-bg: #141414;
+            --card-bg: rgba(20, 20, 20, 0.95); /* Slightly transparent */
             --text-primary: #ffffff;
-            --accent: #3498db; /* Blue */
-            --warning: #f1c40f; /* Yellow */
-            --danger: #e74c3c; /* Red */
-            --success: #2ecc71; /* Green */
+            --accent: #3498db;
+            --warning: #f1c40f;
+            --danger: #e74c3c;
+            --success: #2ecc71;
         }
 
         body {
@@ -23,41 +23,51 @@
             color: var(--text-primary);
             margin: 0;
             padding: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden; /* Prevent scrolling while driving */
-        }
-
-        /* --- TOP SECTION: SPEED & FUEL BAR --- */
-        .dashboard-header {
-            background: var(--card-bg);
-            padding: 15px 20px;
-            border-bottom: 2px solid #222;
-            flex-shrink: 0;
-        }
-
-        .speed-container {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        .speed-val {
-            font-size: 4.5rem;
-            font-weight: 800;
-            line-height: 1;
-            font-variant-numeric: tabular-nums; /* Prevents jittering numbers */
-        }
-        .speed-lbl { font-size: 1rem; color: #888; letter-spacing: 2px; }
-
-        /* The Fuel Bar (Restored) */
-        .fuel-meta { display: flex; justify-content: space-between; font-size: 0.9rem; color: #aaa; margin-bottom: 5px;}
-        .gauge-wrapper {
-            background: #333;
-            height: 16px;
-            border-radius: 8px;
+            /* Use 100dvh (Dynamic Viewport Height) to fix the mobile scroll issue */
+            height: 100dvh; 
             overflow: hidden;
-            position: relative;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+            position: relative; /* Anchor for absolute children */
+        }
+
+        /* --- LAYER 1: THE MAP (Background) --- */
+        #map-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1; /* Lowest layer */
+        }
+        #map { height: 100%; width: 100%; }
+        /* Dark map filter */
+        .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+
+        /* --- LAYER 2: TOP DASHBOARD (Floating) --- */
+        .dashboard-header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            z-index: 10;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+            padding: 20px 20px 40px 20px; /* Extra padding at bottom for gradient fade */
+            pointer-events: none; /* Let touches pass through to map if needed */
+        }
+        
+        /* Re-enable clicking for elements inside the header if necessary */
+        .dashboard-header > * { pointer-events: auto; }
+
+        .speed-container { text-align: center; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .speed-val { font-size: 4rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+        .speed-lbl { font-size: 0.9rem; color: #ccc; letter-spacing: 2px; }
+
+        .fuel-meta { display: flex; justify-content: space-between; font-size: 0.9rem; color: #ddd; margin-bottom: 5px; text-shadow: 0 1px 2px black;}
+        
+        .gauge-wrapper {
+            background: rgba(50, 50, 50, 0.5); /* Semi-transparent backing */
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
         }
         .gauge-bar {
             height: 100%;
@@ -67,26 +77,18 @@
             box-shadow: 0 0 10px var(--accent);
         }
 
-        /* --- MIDDLE SECTION: THE MAP --- */
-        #map-container {
-            flex-grow: 1; /* Takes up remaining space */
-            position: relative;
-            background: #222;
-        }
-        #map { height: 100%; width: 100%; z-index: 1; }
-        /* Dark mode filter for map tiles so it doesn't blind you at night */
-        .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
-
-        /* --- BOTTOM SECTION: CONTROLS --- */
+        /* --- LAYER 3: BOTTOM CONTROLS (Floating Fixed) --- */
         .controls-container {
+            position: fixed; /* Forces it to stay on screen bottom */
+            bottom: 0; left: 0; right: 0;
+            z-index: 20;
             background: var(--card-bg);
             padding: 15px;
+            padding-bottom: max(15px, env(safe-area-inset-bottom)); /* Respects iPhone/Android swipe bar */
             display: flex;
             gap: 10px;
-            border-top: 2px solid #222;
-            flex-shrink: 0;
-            position: relative;
-            z-index: 10;
+            border-top: 1px solid #333;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
         }
 
         .main-btn {
@@ -97,46 +99,45 @@
             font-size: 1.1rem; font-weight: bold; text-transform: uppercase;
             background: #333; color: white;
             display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         .main-btn.recording { background: var(--danger); box-shadow: 0 0 15px var(--danger); }
-
+        
         .settings-btn {
             flex-grow: 1;
             background: #222; border: 1px solid #444; color: #aaa;
             font-size: 1.5rem;
         }
 
-        /* --- HIDDEN MANUAL PANEL --- */
+        /* --- LAYER 4: POPUP MENU --- */
         .manual-panel {
-            position: absolute;
+            position: fixed;
             bottom: 0; left: 0; right: 0;
             background: #1a1a1a;
             padding: 20px;
+            padding-bottom: 40px;
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
-            transform: translateY(110%); /* Hidden downwards by default */
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+            transform: translateY(120%);
             transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-            z-index: 20;
+            z-index: 30; /* Highest layer */
         }
         .manual-panel.active { transform: translateY(0); }
 
-        /* Form styles */
+        /* Form styles remain same */
         .tool-row { display: flex; gap: 10px; margin-bottom: 15px; }
         input.dark-input {
             background: #333; border: 1px solid #444; color: white; padding: 12px;
             border-radius: 8px; width: 100%; text-align: center; font-size: 1rem;
         }
-        button.sm-btn {
-            padding: 12px; border: none; border-radius: 8px;
-            font-weight: bold; color: white; flex: 1;
-        }
+        button.sm-btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; color: white; flex: 1; }
         .btn-blue { background: var(--accent); }
         .btn-green { background: var(--success); }
-        .close-panel { text-align: center; margin-top: 10px; color: #777; cursor: pointer;}
+        .close-panel { text-align: center; margin-top: 15px; color: #777; padding: 10px; }
 
-    </style>
+                </style>
+    
 </head>
 <body>
 

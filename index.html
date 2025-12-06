@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gen-2 HUD Pro</title>
+    <title>Gen-2 Dash</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     
     <style>
@@ -15,7 +15,6 @@
             --warning: #f1c40f;
             --danger: #e74c3c;
             --success: #2ecc71;
-            --input-bg: #222;
         }
 
         body {
@@ -24,30 +23,30 @@
             font-family: 'Segoe UI', Roboto, sans-serif;
             margin: 0; padding: 0;
             height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* --- TOP HUD --- */
+        /* --- HUD PANEL --- */
         .hud-panel {
             background: var(--panel-bg);
             padding: 15px;
             border-bottom: 2px solid #333;
-            z-index: 50; /* Above map */
-            display: flex; flex-direction: column; gap: 10px;
+            z-index: 50; 
+            display: flex; flex-direction: column; gap: 12px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.8);
         }
 
-        .hud-top-row { display: flex; justify-content: space-between; align-items: flex-end; }
+        /* Top Row: Speed & Info */
+        .hud-top { display: flex; justify-content: space-between; align-items: flex-end; }
         .speed-box { line-height: 0.9; }
-        .speed-val { font-size: 4rem; font-weight: 800; letter-spacing: -3px; }
+        .speed-val { font-size: 4rem; font-weight: 800; letter-spacing: -3px; font-variant-numeric: tabular-nums; }
         .speed-unit { font-size: 0.8rem; color: #777; font-weight: bold; margin-left: 5px; }
         
         .info-box { text-align: right; }
         .info-main { font-size: 1.4rem; font-weight: bold; color: #fff; }
         .info-sub { font-size: 0.9rem; color: #888; margin-top: 2px; }
 
+        /* Fuel Bar */
         .gauge-wrapper {
             background: #222; height: 12px; border-radius: 6px; overflow: hidden;
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
@@ -58,16 +57,32 @@
             transition: width 0.3s ease, background 0.3s;
         }
 
-        .controls-row { display: flex; gap: 12px; margin-top: 5px; }
+        /* --- BUTTON LAYOUT (The one you liked) --- */
+        .controls-grid { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 5px; }
+        
+        /* 1. Start Drive (Full Width Top) */
         .btn-drive {
-            flex-grow: 4; background: #222; color: white; border: none; padding: 15px;
-            border-radius: 10px; font-weight: bold; font-size: 1.1rem; text-transform: uppercase;
+            grid-column: 1 / -1; 
+            background: #222; color: white; border: none; padding: 18px;
+            border-radius: 12px; font-weight: bold; font-size: 1.2rem; text-transform: uppercase;
             display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: all 0.2s;
+            transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         .btn-drive.active { background: var(--danger); box-shadow: 0 0 20px rgba(231, 76, 60, 0.4); }
-        .btn-settings {
-            flex-grow: 1; background: #222; border: 1px solid #333; color: #aaa;
+
+        /* 2. Add Fuel (Bottom Left) */
+        .btn-refuel {
+            grid-column: 1; 
+            background: var(--success); color: white; border: none; padding: 15px;
+            border-radius: 10px; font-weight: bold; font-size: 1rem;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            cursor: pointer;
+        }
+
+        /* 3. Config Gear (Bottom Right) */
+        .btn-config {
+            grid-column: 2; 
+            width: 60px; background: #222; border: 1px solid #333; color: #777;
             border-radius: 10px; font-size: 1.5rem; cursor: pointer;
         }
 
@@ -77,73 +92,48 @@
         .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
         .leaflet-control-container .leaflet-top, .leaflet-control-container .leaflet-bottom { display: none; }
 
-        /* --- SETTINGS MENU (FIXED) --- */
-        .menu-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.95); /* Opaque background */
-            z-index: 9999; /* Highest Priority */
+        /* --- POPUP MENUS --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9); z-index: 9999;
             backdrop-filter: blur(5px);
-            display: none; /* Hidden by default */
-            overflow-y: auto; /* Allow scrolling if screen is small */
-            padding: 20px;
-            animation: fadeIn 0.2s ease-out;
+            display: none; align-items: center; justify-content: center;
+            animation: fadeIn 0.2s;
         }
-        .menu-overlay.open { display: block; }
+        .modal-overlay.open { display: flex; }
+        @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+
+        .modal-card {
+            background: #1a1a1a; width: 90%; max-width: 350px;
+            padding: 25px; border-radius: 20px; border: 1px solid #333;
+            text-align: center;
+        }
         
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-title { font-size: 1.2rem; margin: 0 0 20px 0; color: #fff; }
 
-        .menu-container {
-            max-width: 400px; margin: 0 auto;
-            display: flex; flex-direction: column; gap: 20px; padding-top: 20px; padding-bottom: 50px;
-        }
-
-        .menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .menu-title { font-size: 1.5rem; font-weight: bold; color: white; margin: 0; }
-        .btn-close { background: none; border: none; font-size: 2rem; color: #888; cursor: pointer; padding: 0 10px; }
-
-        .menu-card { background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid #333; }
-        .card-title { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 15px 0; }
-
-        /* Input Styling */
+        /* Inputs & Buttons inside Popups */
         input.dark-input {
             width: 100%; padding: 15px; background: #000; border: 1px solid #333;
-            color: white; border-radius: 8px; font-size: 1.2rem;
-            box-sizing: border-box; text-align: center; margin-bottom: 15px;
+            color: white; border-radius: 10px; font-size: 1.2rem;
+            text-align: center; margin-bottom: 15px; box-sizing: border-box;
         }
-        input.dark-input:focus { border-color: var(--accent); outline: none; }
 
-        /* Button Grids */
-        .btn-grid { display: flex; gap: 10px; margin-bottom: 15px; }
-        .btn-opt {
-            flex: 1; padding: 15px; background: #222; border: 1px solid #333; color: #888;
-            border-radius: 8px; font-weight: bold; cursor: pointer;
-        }
+        .btn-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn-opt { flex: 1; padding: 12px; background: #222; border: 1px solid #333; color: #888; border-radius: 8px; cursor: pointer; }
         .btn-opt.selected { background: var(--accent); color: white; border-color: var(--accent); }
         
-        .btn-main {
-            width: 100%; padding: 16px; border-radius: 8px; border: none;
-            font-weight: bold; font-size: 1rem; cursor: pointer; text-transform: uppercase;
-        }
+        .btn-full { width: 100%; padding: 15px; border-radius: 10px; border:none; font-weight:bold; font-size:1rem; cursor: pointer; margin-bottom: 10px;}
         .bg-green { background: var(--success); color: white; }
         .bg-grey { background: #333; color: #ccc; }
-
-        /* Config Toggle */
-        .config-toggle {
-            color: #555; text-align: center; padding: 15px; cursor: pointer;
-            border-top: 1px solid #222; margin-top: 10px; font-size: 0.9rem;
-        }
-        .config-section { display: none; margin-top: 15px; border-top: 1px solid #333; padding-top: 15px; }
-        .config-section.show { display: block; }
-        
-        label { display: block; color: #aaa; font-size: 0.9rem; margin-bottom: 5px; }
+        .bg-trans { background: transparent; color: #666; }
 
     </style>
 </head>
 <body>
 
     <div class="hud-panel">
-        <div class="hud-top-row">
+        
+        <div class="hud-top">
             <div class="speed-box">
                 <span class="speed-val" id="speedVal">0</span><span class="speed-unit">KM/H</span>
             </div>
@@ -152,76 +142,58 @@
                 <div class="info-sub" id="dispRange">-- KM</div>
             </div>
         </div>
+
         <div class="gauge-wrapper">
             <div class="gauge-bar" id="gaugeBar"></div>
         </div>
-        <div class="controls-row">
+        
+        <div class="controls-grid">
             <button class="btn-drive" id="gpsBtn" onclick="toggleDrive()">
                 <span id="gpsIcon">📍</span> <span id="gpsText">Start Drive</span>
             </button>
-            <button class="btn-settings" onclick="toggleMenu()">⚙️</button>
+            <button class="btn-refuel" onclick="openModal('refuelModal')">⛽ Add Fuel</button>
+            <button class="btn-config" onclick="openModal('configModal')">⚙️</button>
         </div>
     </div>
 
     <div id="map-container"><div id="map"></div></div>
 
-    <div class="menu-overlay" id="menuOverlay">
-        <div class="menu-container">
+    <div class="modal-overlay" id="refuelModal">
+        <div class="modal-card">
+            <h3 class="modal-title">Refuel</h3>
+            <input type="number" id="manualRM" class="dark-input" placeholder="RM Amount">
             
-            <div class="menu-header">
-                <h2 class="menu-title">Settings</h2>
-                <button class="btn-close" onclick="toggleMenu()">×</button>
+            <div class="btn-row">
+                <button class="btn-opt selected" id="btnBudi" onclick="setPrice(1.99, 'btnBudi')">BUDI<br><small>1.99</small></button>
+                <button class="btn-opt" id="btnStd" onclick="setPrice(2.60, 'btnStd')">STD<br><small>2.60</small></button>
             </div>
+            
+            <button class="btn-full bg-green" onclick="addFuel()">Confirm Fuel</button>
+            <button class="btn-full bg-grey" onclick="fullTank()">Set FULL TANK (50L)</button>
+            <button class="btn-full bg-trans" onclick="closeModal('refuelModal')">Cancel</button>
+        </div>
+    </div>
 
-            <div class="menu-card">
-                <h4 class="card-title">Add Fuel</h4>
-                <input type="number" id="manualRM" class="dark-input" placeholder="Enter RM Amount">
-                
-                <div class="btn-grid">
-                    <button class="btn-opt selected" id="btnBudi" onclick="setPrice(1.99, 'btnBudi')">
-                        BUDI<br><small>1.99</small>
-                    </button>
-                    <button class="btn-opt" id="btnStd" onclick="setPrice(2.60, 'btnStd')">
-                        STD<br><small>2.60</small>
-                    </button>
-                </div>
-                <button class="btn-main bg-green" onclick="addFuel()">Confirm Refuel</button>
-            </div>
-
-            <div class="menu-card">
-                <h4 class="card-title">Quick Actions</h4>
-                <button class="btn-main bg-grey" onclick="fullTank()" style="margin-bottom:10px;">✅ Set to Full Tank</button>
-            </div>
-
-            <div class="menu-card">
-                <div class="config-toggle" onclick="toggleConfigSection()">
-                    Edit Car Configuration ▼
-                </div>
-                <div class="config-section" id="configSection">
-                    <label>Tank Capacity (Liters)</label>
-                    <input type="number" id="confTank" class="dark-input" placeholder="50">
-                    
-                    <label>Efficiency (KM / L)</label>
-                    <input type="number" id="confEff" class="dark-input" placeholder="11">
-                    
-                    <button class="btn-main bg-grey" onclick="saveCarConfig()">Save Config</button>
-                </div>
-            </div>
-
+    <div class="modal-overlay" id="configModal">
+        <div class="modal-card">
+            <h3 class="modal-title">Car Settings</h3>
+            
+            <label style="color:#aaa; display:block; margin-bottom:5px;">Tank Size (L)</label>
+            <input type="number" id="confTank" class="dark-input" placeholder="50">
+            
+            <label style="color:#aaa; display:block; margin-bottom:5px;">Efficiency (KM/L)</label>
+            <input type="number" id="confEff" class="dark-input" placeholder="11">
+            
+            <button class="btn-full bg-green" onclick="saveConfig()">Save Settings</button>
+            <button class="btn-full bg-trans" onclick="closeModal('configModal')">Cancel</button>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
-        // --- GLOBAL STATE ---
-        let state = {
-            fuel: 25,
-            tankMax: 50,
-            eff: 11,
-            price: 1.99
-        };
-        
+        // --- DATA ---
+        let state = { fuel: 25, tankMax: 50, eff: 11, price: 1.99 };
         let tracking = false;
         let watchId, wakeLock;
         let map, marker;
@@ -235,63 +207,45 @@
         };
 
         function loadState() {
-            // Load Fuel
-            const sFuel = localStorage.getItem('g2_fuel');
-            if(sFuel) state.fuel = parseFloat(sFuel);
+            if(localStorage.getItem('g6_fuel')) state.fuel = parseFloat(localStorage.getItem('g6_fuel'));
+            if(localStorage.getItem('g6_tank')) state.tankMax = parseFloat(localStorage.getItem('g6_tank'));
+            if(localStorage.getItem('g6_eff')) state.eff = parseFloat(localStorage.getItem('g6_eff'));
 
-            // Load Config
-            const sTank = localStorage.getItem('g2_tank');
-            const sEff = localStorage.getItem('g2_eff');
-            
-            if(sTank) state.tankMax = parseFloat(sTank);
-            if(sEff) state.eff = parseFloat(sEff);
-
-            // Populate Config Inputs
             document.getElementById('confTank').value = state.tankMax;
             document.getElementById('confEff').value = state.eff;
         }
 
         function saveData() {
-            localStorage.setItem('g2_fuel', state.fuel.toFixed(4));
-            localStorage.setItem('g2_tank', state.tankMax);
-            localStorage.setItem('g2_eff', state.eff);
+            localStorage.setItem('g6_fuel', state.fuel.toFixed(4));
+            localStorage.setItem('g6_tank', state.tankMax);
+            localStorage.setItem('g6_eff', state.eff);
         }
 
-        // --- UI UPDATES ---
+        // --- UI ---
         function updateUI() {
-            // Clamp
             if(state.fuel < 0) state.fuel = 0;
             if(state.fuel > state.tankMax) state.fuel = state.tankMax;
-            
             saveData();
 
-            // Calcs
             const pct = (state.fuel / state.tankMax) * 100;
             const range = state.fuel * state.eff;
 
-            // DOM
             document.getElementById('dispLiters').innerText = state.fuel.toFixed(1) + " L";
             document.getElementById('dispRange').innerText = "~" + range.toFixed(0) + " KM";
             
             const bar = document.getElementById('gaugeBar');
             bar.style.width = pct + "%";
-            
-            // Colors
             if(pct < 15) bar.style.background = "var(--danger)";
             else if(pct < 30) bar.style.background = "var(--warning)";
             else bar.style.background = "var(--accent)";
             bar.style.boxShadow = `0 0 15px ${bar.style.background}`;
         }
 
-        // --- MENU LOGIC ---
-        function toggleMenu() {
-            document.getElementById('menuOverlay').classList.toggle('open');
-        }
+        // --- MODALS ---
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-        function toggleConfigSection() {
-            document.getElementById('configSection').classList.toggle('show');
-        }
-
+        // --- ACTIONS ---
         function setPrice(p, id) {
             state.price = p;
             document.querySelectorAll('.btn-opt').forEach(b => b.classList.remove('selected'));
@@ -300,54 +254,37 @@
 
         function addFuel() {
             const rm = parseFloat(document.getElementById('manualRM').value);
-            if(!rm || rm <= 0) return alert("Enter valid RM amount");
-            
-            const liters = rm / state.price;
-            state.fuel += liters;
-            
-            document.getElementById('manualRM').value = "";
-            toggleMenu();
-            updateUI();
-            alert(`Added ${liters.toFixed(2)} L`);
+            if(rm > 0) {
+                state.fuel += (rm / state.price);
+                document.getElementById('manualRM').value = "";
+                closeModal('refuelModal');
+                updateUI();
+            }
         }
 
         function fullTank() {
-            if(confirm("Confirm: Tank is 100% full?")) {
+            if(confirm("Confirm Full Tank?")) {
                 state.fuel = state.tankMax;
-                toggleMenu();
+                closeModal('refuelModal');
                 updateUI();
             }
         }
 
-        function saveCarConfig() {
+        function saveConfig() {
             const t = parseFloat(document.getElementById('confTank').value);
             const e = parseFloat(document.getElementById('confEff').value);
-            
             if(t > 0 && e > 0) {
-                state.tankMax = t;
-                state.eff = e;
+                state.tankMax = t; state.eff = e;
                 updateUI();
-                alert("Car configuration saved!");
-                toggleConfigSection(); // hide inputs
-            } else {
-                alert("Please enter valid numbers");
+                closeModal('configModal');
             }
         }
 
-        // --- GPS & MAP ---
+        // --- GPS ENGINE ---
         function initMap() {
-            map = L.map('map', { 
-                zoomControl: false, dragging: false, touchZoom: false, 
-                doubleClickZoom: false, scrollWheelZoom: false, tap: false 
-            }).setView([4.2105, 101.9758], 15);
-            
+            map = L.map('map', { zoomControl:false, dragging:false, touchZoom:false, scrollWheelZoom:false }).setView([4.2105, 101.9758], 15);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
-            
-            const icon = L.divIcon({
-                className: 'car-marker',
-                html: '<div style="width:24px;height:24px;background:#3498db;border:4px solid white;border-radius:50%;box-shadow:0 0 15px #3498db;"></div>',
-                iconSize: [32, 32], iconAnchor: [16, 16]
-            });
+            const icon = L.divIcon({ className: 'car', html: '<div style="width:24px;height:24px;background:#3498db;border:4px solid white;border-radius:50%;box-shadow:0 0 15px #3498db;"></div>', iconSize:[32,32], iconAnchor:[16,16] });
             marker = L.marker([0,0], {icon: icon});
         }
 
@@ -356,30 +293,30 @@
             const txt = document.getElementById('gpsText');
             
             if(!tracking) {
+                // START
                 if(!navigator.geolocation) return alert("GPS Required");
                 try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
                 
                 tracking = true;
-                btn.classList.add('active');
-                txt.innerText = "STOP";
+                btn.classList.add('active'); txt.innerText = "STOP DRIVE";
                 
                 watchId = navigator.geolocation.watchPosition(pos => {
                     const { latitude: lat, longitude: lon, speed } = pos.coords;
                     
-                    // Speed
+                    // Update Speed
                     let kmh = (speed || 0) * 3.6;
-                    if(kmh < 3) kmh = 0;
                     document.getElementById('speedVal').innerText = kmh.toFixed(0);
 
-                    // Map
+                    // Update Map
                     const loc = new L.LatLng(lat, lon);
                     if(!map.hasLayer(marker)) marker.addTo(map);
                     marker.setLatLng(loc);
                     map.setView(loc, 17);
 
-                    // Fuel Calc
-                    if(lastLat && kmh > 2) {
+                    // Update Fuel
+                    if(lastLat && kmh > 3) {
                         const dist = getDist(lastLat, lastLon, lat, lon);
+                        // Filter noise (must move > 2 meters but < 500 meters per tick)
                         if(dist > 0.002 && dist < 0.5) {
                             state.fuel -= (dist / state.eff);
                             updateUI();
@@ -390,11 +327,11 @@
                 }, err => console.log(err), { enableHighAccuracy: true });
 
             } else {
+                // STOP
                 tracking = false;
                 navigator.geolocation.clearWatch(watchId);
                 if(wakeLock) wakeLock.release();
-                btn.classList.remove('active');
-                txt.innerText = "START DRIVE";
+                btn.classList.remove('active'); txt.innerText = "START DRIVE";
                 document.getElementById('speedVal').innerText = "0";
             }
         }
@@ -409,5 +346,3 @@
     </script>
 </body>
 </html>
-
-        

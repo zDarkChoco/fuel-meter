@@ -1,60 +1,60 @@
-# 🚗 Gen-2 Virtual Dashboard & Fuel Tracker
+# 🚗 Gen-2 Digital Dashboard & Fuel Tracker
 
-A web-based Heads-Up Display (HUD) and fuel management system designed to replace a broken physical fuel gauge. This application uses your phone's GPS to track distance traveled and automatically calculates fuel consumption in real-time.
+A web-based Heads-Up Display (HUD) designed to replace a broken physical fuel gauge. This application turns your smartphone into a smart dashboard that tracks your driving distance via GPS, calculates real-time fuel usage, and overlays this data on a live map.
 
 **🔗 Live App:** [https://zdarkchoco.github.io/fuel-meter/](https://zdarkchoco.github.io/fuel-meter/)
 
 ## 📖 The Problem
-The physical fuel gauge in my Proton Gen-2 is broken, making it impossible to know how much fuel is left or when to refuel. Relying on memory or guessing mileage is unreliable and risky.
+The physical fuel gauge in my Proton Gen-2 is non-functional. Estimating fuel levels based on memory or trip meters is unreliable.
 
 ## 💡 The Solution
-A "Virtual Dashboard" that runs in a mobile browser. It acts as the car's memory.
-* **It remembers** your fuel level (even if you close the browser).
-* **It tracks** your driving distance using GPS.
-* **It calculates** fuel usage based on the car's specific efficiency (11 km/L).
-* **It visualizes** the data with a digital speedometer and fuel bar.
+This web app acts as the car's persistent memory.
+* **It tracks** your speed and distance using GPS.
+* **It calculates** fuel consumption based on your specific car's efficiency.
+* **It saves** your data automatically to your phone, so it remembers your fuel level even after you close the browser.
 
 ## ✨ Key Features
 
-### 🖥️ Heads-Up Display (HUD)
-* **Digital Speedometer:** Large, easy-to-read speed display (km/h) derived from GPS data.
-* **Visual Fuel Gauge:** A color-coded progress bar (Blue → Yellow → Red) indicating current fuel level.
-* **Range Estimator:** Calculates approximately how many kilometers you can drive before empty.
+### 🖥️ Driver's HUD (Heads-Up Display)
+* **Live Speedometer:** Large, high-contrast KM/H display.
+* **Fuel Monitor:** Visual progress bar (Blue → Yellow → Red) with exact Liters and Range estimates.
+* **Always-On Map:** A dark-mode map that automatically follows your car's position (no interaction needed).
+* **Wake Lock:** Prevents your phone screen from turning off while driving.
 
-### 📍 GPS Integration & Mapping
-* **Auto-Following Map:** Integrated dark-mode map (Leaflet.js & OpenStreetMap) that locks to your current position.
-* **Real-Time Tracking:** Calculates distance moved every few seconds and deducts the precise amount of fuel consumed.
-* **Noise Filtering:** Intelligent algorithms ignore GPS "drift" (jitter) when the car is stationary.
+### ⛽ Quick Refuel System
+* **RM Calculator:** No need to calculate liters manually. Just enter the RM amount (e.g., "50").
+* **Price Toggles:** Quickly switch between **Diesel Budi (1.99)** and **Standard (2.60)** rates.
+* **Full Tank Sync:** A dedicated button to instantly reset the system to 100% capacity when you fill to the brim.
 
-### ⛽ Smart Refueling System
-* **RM-to-Liters Calculator:** You don't need to guess liters. Just input the amount you paid (e.g., RM 50).
-* **Price Selector:** Toggle between **Diesel Budi (RM 1.99)** and **Standard (RM 2.60)** prices.
-* **Full Tank Sync:** One-click button to reset the system to 100% (50L) when you fill the tank to the brim.
+### ⚙️ In-App Configuration (New!)
+* **Customizable:** You can now change the **Tank Size** and **Fuel Efficiency** directly inside the app.
+* **Universal:** While designed for a Proton Gen-2, this app can be configured for *any* car via the Settings menu.
 
-### 💾 Data Persistence
-* Uses **LocalStorage** to save fuel data directly on your phone.
-* No server or login required. Your data stays on your device.
+## 📱 User Guide
 
-## 📱 How to Use
+### 1. While Driving
+1.  Open the app and mount your phone on the dashboard.
+2.  Tap the big **"📍 START DRIVE"** button.
+3.  The app will lock onto your GPS and track your fuel usage as you move.
+4.  Tap **"STOP DRIVE"** when you park.
 
-### 1. Driving (The Dashboard)
-1.  Open the [Live Link](https://zdarkchoco.github.io/fuel-meter/) on your phone.
-2.  Mount your phone on the dashboard.
-3.  Click the **"📍 START DRIVE"** button.
-    * *Note: You must allow Location Permissions.*
-4.  The system will prevent the screen from sleeping (Wake Lock) and track your speed/fuel as you drive.
-5.  When you park, click **"STOP DRIVE"**.
+### 2. At the Gas Station
+1.  Tap the **"⛽ Add Fuel"** button (bottom left).
+2.  Enter the amount you paid (e.g., `50`).
+3.  Select the price rate.
+4.  Tap **"Confirm Fuel"**. The app adds the new fuel to your current total.
+    * *Note: If you filled it completely, just tap "Set FULL TANK".*
 
-### 2. Refueling
-1.  Click the **Gear Icon (⚙️)** to open the settings menu.
-2.  **Option A (Partial Fill):** Enter the money spent (e.g., `50`), select the price rate, and click **"Confirm Fuel Added"**.
-3.  **Option B (Full Tank):** If you filled it to the max, just click **"Set to FULL TANK"**.
+### 3. Setting Up (First Time)
+1.  Tap the **Gear Icon (⚙️)** (bottom right).
+2.  Enter your car's **Tank Capacity** (e.g., 50 Liters).
+3.  Enter your car's **Efficiency** (e.g., 11 KM/L).
+4.  Tap **Save Settings**.
 
-## 🛠️ Technical Details for Customization
+## 🛠️ Technical Info
+* **Frontend:** HTML5, CSS3, Vanilla JavaScript.
+* **Mapping:** [Leaflet.js](https://leafletjs.com/) with OpenStreetMap (CartoDB Dark Matter tiles).
+* **Storage:** HTML5 LocalStorage (Data stays on your device).
+* **Privacy:** No data is sent to any server. Location data is processed locally on your phone.
 
-If you want to fork this project for a different car, you can modify the constants in the `index.html` file:
-
-```javascript
-// --- CONFIGURATION ---
-const TANK_CAPACITY = 50;  // Tank size in Liters
-const EFFICIENCY = 11;     // Average fuel consumption (KM per Liter)
+##

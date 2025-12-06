@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gen-2 Dash</title>
+    <title>Gen-2 BUDI Dash</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     
     <style>
@@ -36,7 +36,6 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.8);
         }
 
-        /* Top Row: Speed & Info */
         .hud-top { display: flex; justify-content: space-between; align-items: flex-end; }
         .speed-box { line-height: 0.9; }
         .speed-val { font-size: 4rem; font-weight: 800; letter-spacing: -3px; font-variant-numeric: tabular-nums; }
@@ -46,7 +45,6 @@
         .info-main { font-size: 1.4rem; font-weight: bold; color: #fff; }
         .info-sub { font-size: 0.9rem; color: #888; margin-top: 2px; }
 
-        /* Fuel Bar */
         .gauge-wrapper {
             background: #222; height: 12px; border-radius: 6px; overflow: hidden;
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
@@ -57,10 +55,9 @@
             transition: width 0.3s ease, background 0.3s;
         }
 
-        /* --- BUTTON LAYOUT (The one you liked) --- */
+        /* --- CONTROLS --- */
         .controls-grid { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 5px; }
         
-        /* 1. Start Drive (Full Width Top) */
         .btn-drive {
             grid-column: 1 / -1; 
             background: #222; color: white; border: none; padding: 18px;
@@ -70,7 +67,6 @@
         }
         .btn-drive.active { background: var(--danger); box-shadow: 0 0 20px rgba(231, 76, 60, 0.4); }
 
-        /* 2. Add Fuel (Bottom Left) */
         .btn-refuel {
             grid-column: 1; 
             background: var(--success); color: white; border: none; padding: 15px;
@@ -79,7 +75,6 @@
             cursor: pointer;
         }
 
-        /* 3. Config Gear (Bottom Right) */
         .btn-config {
             grid-column: 2; 
             width: 60px; background: #222; border: 1px solid #333; color: #777;
@@ -92,7 +87,7 @@
         .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
         .leaflet-control-container .leaflet-top, .leaflet-control-container .leaflet-bottom { display: none; }
 
-        /* --- POPUP MENUS --- */
+        /* --- MODALS --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.9); z-index: 9999;
@@ -109,16 +104,25 @@
             text-align: center;
         }
         
-        .modal-title { font-size: 1.2rem; margin: 0 0 20px 0; color: #fff; }
+        .modal-title { font-size: 1.2rem; margin: 0 0 15px 0; color: #fff; }
 
-        /* Inputs & Buttons inside Popups */
+        /* Calculation Preview Box */
+        .calc-preview {
+            background: #2a2a2a; border-radius: 10px; padding: 15px;
+            margin-bottom: 20px; border: 1px solid #444;
+            text-align: left;
+        }
+        .preview-lbl { font-size: 0.8rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .preview-val { font-size: 1.4rem; font-weight: bold; color: var(--accent); }
+        .preview-sub { font-size: 0.9rem; color: #888; }
+
         input.dark-input {
             width: 100%; padding: 15px; background: #000; border: 1px solid #333;
             color: white; border-radius: 10px; font-size: 1.2rem;
             text-align: center; margin-bottom: 15px; box-sizing: border-box;
         }
 
-        .btn-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn-row { display: flex; gap: 10px; margin-bottom: 20px; }
         .btn-opt { flex: 1; padding: 12px; background: #222; border: 1px solid #333; color: #888; border-radius: 8px; cursor: pointer; }
         .btn-opt.selected { background: var(--accent); color: white; border-color: var(--accent); }
         
@@ -132,7 +136,6 @@
 <body>
 
     <div class="hud-panel">
-        
         <div class="hud-top">
             <div class="speed-box">
                 <span class="speed-val" id="speedVal">0</span><span class="speed-unit">KM/H</span>
@@ -142,11 +145,9 @@
                 <div class="info-sub" id="dispRange">-- KM</div>
             </div>
         </div>
-
         <div class="gauge-wrapper">
             <div class="gauge-bar" id="gaugeBar"></div>
         </div>
-        
         <div class="controls-grid">
             <button class="btn-drive" id="gpsBtn" onclick="toggleDrive()">
                 <span id="gpsIcon">📍</span> <span id="gpsText">Start Drive</span>
@@ -160,15 +161,22 @@
 
     <div class="modal-overlay" id="refuelModal">
         <div class="modal-card">
-            <h3 class="modal-title">Refuel</h3>
-            <input type="number" id="manualRM" class="dark-input" placeholder="RM Amount">
+            <h3 class="modal-title">Enter Payment Amount</h3>
+            
+            <input type="number" id="manualRM" class="dark-input" placeholder="e.g. 50" oninput="updateCalc()">
             
             <div class="btn-row">
-                <button class="btn-opt selected" id="btnBudi" onclick="setPrice(1.99, 'btnBudi')">BUDI<br><small>1.99</small></button>
-                <button class="btn-opt" id="btnStd" onclick="setPrice(2.60, 'btnStd')">STD<br><small>2.60</small></button>
+                <button class="btn-opt selected" id="btnBudi" onclick="setPrice(1.99, 'btnBudi')">BUDI (1.99)</button>
+                <button class="btn-opt" id="btnStd" onclick="setPrice(2.60, 'btnStd')">STD (2.60)</button>
+            </div>
+
+            <div class="calc-preview">
+                <div class="preview-lbl">⛽ Pump Should Show:</div>
+                <div class="preview-val" id="prevRM">RM 0.00</div>
+                <div class="preview-sub" id="prevLiters">0.0 Liters</div>
             </div>
             
-            <button class="btn-full bg-green" onclick="addFuel()">Confirm Fuel</button>
+            <button class="btn-full bg-green" onclick="addFuel()">Confirm Fuel Added</button>
             <button class="btn-full bg-grey" onclick="fullTank()">Set FULL TANK (50L)</button>
             <button class="btn-full bg-trans" onclick="closeModal('refuelModal')">Cancel</button>
         </div>
@@ -177,13 +185,10 @@
     <div class="modal-overlay" id="configModal">
         <div class="modal-card">
             <h3 class="modal-title">Car Settings</h3>
-            
             <label style="color:#aaa; display:block; margin-bottom:5px;">Tank Size (L)</label>
             <input type="number" id="confTank" class="dark-input" placeholder="50">
-            
             <label style="color:#aaa; display:block; margin-bottom:5px;">Efficiency (KM/L)</label>
             <input type="number" id="confEff" class="dark-input" placeholder="11">
-            
             <button class="btn-full bg-green" onclick="saveConfig()">Save Settings</button>
             <button class="btn-full bg-trans" onclick="closeModal('configModal')">Cancel</button>
         </div>
@@ -194,6 +199,8 @@
     <script>
         // --- DATA ---
         let state = { fuel: 25, tankMax: 50, eff: 11, price: 1.99 };
+        const MARKET_RATE = 2.60; // The actual rate at the pump screen
+
         let tracking = false;
         let watchId, wakeLock;
         let map, marker;
@@ -207,21 +214,21 @@
         };
 
         function loadState() {
-            if(localStorage.getItem('g6_fuel')) state.fuel = parseFloat(localStorage.getItem('g6_fuel'));
-            if(localStorage.getItem('g6_tank')) state.tankMax = parseFloat(localStorage.getItem('g6_tank'));
-            if(localStorage.getItem('g6_eff')) state.eff = parseFloat(localStorage.getItem('g6_eff'));
+            if(localStorage.getItem('g7_fuel')) state.fuel = parseFloat(localStorage.getItem('g7_fuel'));
+            if(localStorage.getItem('g7_tank')) state.tankMax = parseFloat(localStorage.getItem('g7_tank'));
+            if(localStorage.getItem('g7_eff')) state.eff = parseFloat(localStorage.getItem('g7_eff'));
 
             document.getElementById('confTank').value = state.tankMax;
             document.getElementById('confEff').value = state.eff;
         }
 
         function saveData() {
-            localStorage.setItem('g6_fuel', state.fuel.toFixed(4));
-            localStorage.setItem('g6_tank', state.tankMax);
-            localStorage.setItem('g6_eff', state.eff);
+            localStorage.setItem('g7_fuel', state.fuel.toFixed(4));
+            localStorage.setItem('g7_tank', state.tankMax);
+            localStorage.setItem('g7_eff', state.eff);
         }
 
-        // --- UI ---
+        // --- UI UPDATES ---
         function updateUI() {
             if(state.fuel < 0) state.fuel = 0;
             if(state.fuel > state.tankMax) state.fuel = state.tankMax;
@@ -245,18 +252,49 @@
         function openModal(id) { document.getElementById(id).classList.add('open'); }
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-        // --- ACTIONS ---
+        // --- CALCULATOR LOGIC ---
         function setPrice(p, id) {
             state.price = p;
             document.querySelectorAll('.btn-opt').forEach(b => b.classList.remove('selected'));
             document.getElementById(id).classList.add('selected');
+            updateCalc(); // Recalculate preview when price toggles
+        }
+
+        function updateCalc() {
+            const payRM = parseFloat(document.getElementById('manualRM').value) || 0;
+            const prevRM = document.getElementById('prevRM');
+            const prevLiters = document.getElementById('prevLiters');
+
+            if(payRM > 0) {
+                // 1. Calculate how many Liters you GET for your money
+                const litersReceived = payRM / state.price;
+
+                // 2. Calculate what the PUMP SCREEN shows (Market Rate)
+                const pumpDisplayRM = litersReceived * MARKET_RATE;
+
+                prevRM.innerText = "RM " + pumpDisplayRM.toFixed(2);
+                prevLiters.innerText = litersReceived.toFixed(1) + " Liters";
+                
+                // Visual cue if BUDI is on
+                if(state.price < MARKET_RATE) {
+                    prevRM.style.color = "var(--success)"; // Green text indicating value
+                } else {
+                    prevRM.style.color = "var(--accent)"; // Standard blue
+                }
+            } else {
+                prevRM.innerText = "RM 0.00";
+                prevLiters.innerText = "0.0 Liters";
+            }
         }
 
         function addFuel() {
-            const rm = parseFloat(document.getElementById('manualRM').value);
-            if(rm > 0) {
-                state.fuel += (rm / state.price);
+            const payRM = parseFloat(document.getElementById('manualRM').value);
+            if(payRM > 0) {
+                // Add the calculated liters
+                state.fuel += (payRM / state.price);
+                
                 document.getElementById('manualRM').value = "";
+                updateCalc(); // Reset preview
                 closeModal('refuelModal');
                 updateUI();
             }
@@ -303,27 +341,22 @@
                 watchId = navigator.geolocation.watchPosition(pos => {
                     const { latitude: lat, longitude: lon, speed } = pos.coords;
                     
-                    // Update Speed
                     let kmh = (speed || 0) * 3.6;
                     document.getElementById('speedVal').innerText = kmh.toFixed(0);
 
-                    // Update Map
                     const loc = new L.LatLng(lat, lon);
                     if(!map.hasLayer(marker)) marker.addTo(map);
                     marker.setLatLng(loc);
                     map.setView(loc, 17);
 
-                    // Update Fuel
                     if(lastLat && kmh > 3) {
                         const dist = getDist(lastLat, lastLon, lat, lon);
-                        // Filter noise (must move > 2 meters but < 500 meters per tick)
                         if(dist > 0.002 && dist < 0.5) {
                             state.fuel -= (dist / state.eff);
                             updateUI();
                         }
                     }
                     lastLat = lat; lastLon = lon;
-
                 }, err => console.log(err), { enableHighAccuracy: true });
 
             } else {

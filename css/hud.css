@@ -1,0 +1,363 @@
+/* ==========================================================================
+   Floating Heads-Up Display (HUD) & Dashboard Controls
+   ========================================================================== */
+
+/* The main HUD Container overlays on top of the fullscreen map */
+.hud-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none; /* Allows interacting with map underneath except on cards */
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: calc(var(--safe-top) + 8px) calc(var(--safe-right) + 12px) calc(var(--safe-bottom) + 12px) calc(var(--safe-left) + 12px);
+}
+
+/* Enable pointer events on all floating elements */
+.hud-layer > * {
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   Top Floating HUD Island
+   ========================================================================== */
+.hud-top-island {
+  border-radius: 28px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hud-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Speedometer Display */
+.speedometer-block {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.speed-value {
+  font-size: 3.8rem;
+  font-weight: 900;
+  line-height: 0.9;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -2px;
+  color: #ffffff;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  transition: color 0.3s;
+}
+
+.speed-unit {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--neon-cyan);
+  text-transform: uppercase;
+}
+
+/* Fuel & Range Summary */
+.fuel-summary-block {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fuel-main-val {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.fuel-range-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--neon-cyan);
+  letter-spacing: 0.5px;
+}
+
+/* Status Badges Row (GPS, WakeLock, Demo) */
+.hud-status-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-dim);
+  transition: all 0.3s;
+}
+
+.status-badge.active-gps {
+  border-color: var(--neon-emerald);
+  color: #ffffff;
+  background: rgba(0, 245, 160, 0.15);
+}
+
+.status-badge.active-gps::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--neon-emerald);
+  box-shadow: 0 0 8px var(--neon-emerald);
+}
+
+.status-badge.active-wake {
+  border-color: var(--neon-cyan);
+  color: #ffffff;
+  background: rgba(0, 242, 254, 0.15);
+}
+
+.status-badge.demo-mode-badge {
+  border-color: var(--neon-amber);
+  color: #ffffff;
+  background: rgba(245, 166, 35, 0.2);
+}
+
+/* ==========================================================================
+   Liquid Glass Fuel Tube Gauge
+   ========================================================================== */
+.fuel-tube-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fuel-tube-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.fuel-tube-track {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  position: relative;
+}
+
+.fuel-tube-fill {
+  height: 100%;
+  width: 50%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #00f2fe 0%, #4facfe 50%, #00f5a0 100%);
+  box-shadow: 0 0 16px rgba(0, 242, 254, 0.6);
+  transition: width 0.4s var(--trans-smooth), background 0.4s var(--trans-smooth), box-shadow 0.4s;
+  position: relative;
+}
+
+/* Fluid Liquid Shimmer Overlay */
+.fuel-tube-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: liquidShimmer 2.5s infinite linear;
+}
+
+@keyframes liquidShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* Color states */
+.fuel-state-normal {
+  background: linear-gradient(90deg, #00c6ff 0%, #0072ff 60%, #00f5a0 100%);
+  box-shadow: 0 0 16px rgba(0, 242, 254, 0.7);
+}
+
+.fuel-state-warning {
+  background: linear-gradient(90deg, #f7971e 0%, #ffd200 100%);
+  box-shadow: 0 0 16px rgba(245, 166, 35, 0.7);
+}
+
+.fuel-state-danger {
+  background: linear-gradient(90deg, #f85032 0%, #e73827 100%);
+  box-shadow: 0 0 22px rgba(255, 42, 109, 0.9);
+  animation: pulseDanger 1.2s infinite alternate;
+}
+
+@keyframes pulseDanger {
+  0% { opacity: 0.85; filter: brightness(1); }
+  100% { opacity: 1; filter: brightness(1.3); }
+}
+
+/* ==========================================================================
+   Trip Computer Floating Mini-Card (Togglable/Expandable)
+   ========================================================================== */
+.trip-stats-drawer {
+  border-radius: 20px;
+  padding: 10px 18px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  max-width: 600px;
+  margin: 6px auto 0;
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.trip-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.trip-stat-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+
+.trip-stat-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Bottom Floating Control Dock
+   ========================================================================== */
+.hud-bottom-dock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Primary Drive Button */
+.btn-drive-primary {
+  width: 100%;
+  height: 64px;
+  border-radius: 22px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 245, 160, 0.4) 0%,
+    rgba(0, 242, 254, 0.25) 50%,
+    rgba(0, 0, 0, 0.4) 100%
+  ), rgba(12, 26, 42, 0.85);
+  border: 1px solid var(--neon-cyan);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 242, 254, 0.25);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: all 0.25s var(--trans-spring);
+}
+
+.btn-drive-primary.active {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 42, 109, 0.6) 0%,
+    rgba(245, 0, 87, 0.35) 50%,
+    rgba(0, 0, 0, 0.5) 100%
+  ), rgba(28, 12, 18, 0.9);
+  border-color: var(--neon-ruby);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 42, 109, 0.5);
+  animation: driveActivePulse 2s infinite ease-in-out;
+}
+
+@keyframes driveActivePulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+  100% { transform: scale(1); }
+}
+
+.drive-icon {
+  font-size: 1.4rem;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+/* Secondary Floating Action Dock */
+.secondary-dock-row {
+  display: grid;
+  grid-template-columns: 2fr repeat(auto-fit, minmax(50px, 1fr));
+  gap: 10px;
+}
+
+.btn-refuel-dock {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 245, 160, 0.3) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  ), rgba(14, 32, 28, 0.75);
+  border-color: rgba(0, 245, 160, 0.4);
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+}
+
+.btn-refuel-dock:hover {
+  border-color: var(--neon-emerald);
+  box-shadow: 0 0 20px rgba(0, 245, 160, 0.35);
+}
+
+/* Install App Pill (visible when installable) */
+.btn-install-pwa {
+  display: none;
+  background: linear-gradient(
+    135deg,
+    rgba(155, 81, 224, 0.4) 0%,
+    rgba(0, 242, 254, 0.2) 100%
+  ), rgba(25, 18, 45, 0.85);
+  border-color: var(--neon-purple);
+  box-shadow: 0 0 18px rgba(155, 81, 224, 0.3);
+  animation: installGlow 2.5s infinite alternate;
+}
+
+@keyframes installGlow {
+  0% { border-color: rgba(155, 81, 224, 0.4); box-shadow: 0 0 12px rgba(155, 81, 224, 0.2); }
+  100% { border-color: var(--neon-cyan); box-shadow: 0 0 22px rgba(0, 242, 254, 0.5); }
+}
+
+.btn-install-pwa.show {
+  display: inline-flex;
+}

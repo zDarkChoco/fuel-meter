@@ -1,60 +1,91 @@
-# 🚗 Gen-2 Digital Dashboard & Fuel Tracker
+# 🚗 Gen-2 Liquid Glass Fuel Meter & Floating HUD
 
-A web-based Heads-Up Display (HUD) designed to replace a broken physical fuel gauge. This application turns your smartphone into a smart dashboard that tracks your driving distance via GPS, calculates real-time fuel usage, and overlays this data on a live map.
+A modern, progressive web application (PWA) designed as a floating **Liquid Glass Heads-Up Display (HUD)** and real-time GPS fuel tracker. Originally engineered to replace a broken physical fuel gauge in a Proton Gen-2, this app works universally for any vehicle.
 
-**🔗 Live App:** [https://zdarkchoco.github.io/fuel-meter/](https://zdarkchoco.github.io/fuel-meter/)
+**🔗 Live GitHub Pages App:** [https://zdarkchoco.github.io/fuel-meter/](https://zdarkchoco.github.io/fuel-meter/)
 
-## 📖 The Problem
-The physical fuel gauge in my Proton Gen-2 is non-functional. Estimating fuel levels based on memory or trip meters is unreliable.
+---
 
-## 💡 The Solution
-This web app acts as the car's persistent memory.
-* **It tracks** your speed and distance using GPS.
-* **It calculates** fuel consumption based on your specific car's efficiency.
-* **It saves** your data automatically to your phone, so it remembers your fuel level even after you close the browser.
+## 💎 Liquid Glass Design & Floating HUD
 
-## ✨ Key Features
+The interface has been redesigned with a modern **Liquid Glassmorphism** aesthetic:
+* **Fullscreen Living Map:** Seamless dark-matter street map underneath the floating interface with auto-following and smooth panning.
+* **Floating Glass Island:** The top status HUD floats over the map with multi-layered specular reflections, backdrop blur, glowing borders, and reactive lighting.
+* **Liquid Fuel Tube Gauge:** Animated fluid fuel bar that shifts from Cyan/Emerald to Amber warning (15%) and pulsating Ruby alert (< 8%).
+* **Floating Bottom Dock:** Ergonomic action dock positioned above mobile safe areas with tactile haptics, quick refuel, map recenter, and full-screen toggles.
 
-### 🖥️ Driver's HUD (Heads-Up Display)
-* **Live Speedometer:** Large, high-contrast KM/H display.
-* **Fuel Monitor:** Visual progress bar (Blue → Yellow → Red) with exact Liters and Range estimates.
-* **Always-On Map:** A dark-mode map that automatically follows your car's position (no interaction needed).
-* **Wake Lock:** Prevents your phone screen from turning off while driving.
+---
 
-### ⛽ Quick Refuel System
-* **RM Calculator:** No need to calculate liters manually. Just enter the RM amount (e.g., "50").
-* **Price Toggles:** Quickly switch between **Diesel Budi (1.99)** and **Standard (2.60)** rates.
-* **Full Tank Sync:** A dedicated button to instantly reset the system to 100% capacity when you fill to the brim.
+## ✨ Features & Functionality
 
-### ⚙️ In-App Configuration (New!)
-* **Customizable:** You can now change the **Tank Size** and **Fuel Efficiency** directly inside the app.
-* **Universal:** While designed for a Proton Gen-2, this app can be configured for *any* car via the Settings menu.
+### 🖥️ Heads-Up Display & Driving Computer
+* **Live GPS Speedometer:** Large, high-contrast digital readout in KM/H with velocity glow.
+* **Smart Fuel & Range Engine:** Real-time fuel deduction calculated via high-accuracy Haversine GPS distance deltas and car efficiency.
+* **Trip Computer:** Tracks trip distance (KM), trip fuel consumed (L), driving duration, average speed, and top speed.
+* **Screen Wake Lock:** Prevents smartphone display from sleeping while mounted on the dashboard.
+* **Heading & Radar Marker:** Custom vehicle marker on the map with heading direction indicator and animated radar ping waves.
 
-## 📱 User Guide
+### ⛽ Refuel Calculator & Gas Pump Sync
+* **Quick Payment Chips:** One-tap `+RM20`, `+RM30`, `+RM50`, `+RM70`, `+RM100` chips.
+* **Malaysian Fuel Presets:** Instant toggles for **BUDI Subsidised Diesel (1.99)**, **RON95 (2.05)**, **Standard Diesel (2.60)**, and **RON97 (3.19)**.
+* **Pump Screen Preview:** Calculates exact liters received and displays what the commercial gas pump meter will read.
+* **Full Tank One-Tap Sync:** Reset fuel level to 100% capacity with a single confirmation.
+* **Refuel History Logs:** Automatically stores past refuels with date, liters added, RM spent, and price rate.
 
-### 1. While Driving
-1.  Open the app and mount your phone on the dashboard.
-2.  Tap the big **"📍 START DRIVE"** button.
-3.  The app will lock onto your GPS and track your fuel usage as you move.
-4.  Tap **"STOP DRIVE"** when you park.
+### 🎮 Built-in Demo Drive Simulation
+* Test the speedometer, map centering, car rotation, fuel consumption, and trip computer anywhere—without needing to be in a moving car!
 
-### 2. At the Gas Station
-1.  Tap the **"⛽ Add Fuel"** button (bottom left).
-2.  Enter the amount you paid (e.g., `50`).
-3.  Select the price rate.
-4.  Tap **"Confirm Fuel"**. The app adds the new fuel to your current total.
-    * *Note: If you filled it completely, just tap "Set FULL TANK".*
+### 🔊 Futuristic Web Audio Synthesizer
+* Native Web Audio API synthesizer generates tactile clicks, celebratory refuel chimes, and low-fuel alarms with zero external audio assets.
 
-### 3. Setting Up (First Time)
-1.  Tap the **Gear Icon (⚙️)** (bottom right).
-2.  Enter your car's **Tank Capacity** (e.g., 50 Liters).
-3.  Enter your car's **Efficiency** (e.g., 11 KM/L).
-4.  Tap **Save Settings**.
+---
 
-## 🛠️ Technical Info
-* **Frontend:** HTML5, CSS3, Vanilla JavaScript.
-* **Mapping:** [Leaflet.js](https://leafletjs.com/) with OpenStreetMap (CartoDB Dark Matter tiles).
-* **Storage:** HTML5 LocalStorage (Data stays on your device).
-* **Privacy:** No data is sent to any server. Location data is processed locally on your phone.
+## 📲 Install on Android Chrome (PWA)
 
-##
+This app is a full Progressive Web App (PWA) with offline caching and standalone display:
+
+1. Open [https://zdarkchoco.github.io/fuel-meter/](https://zdarkchoco.github.io/fuel-meter/) in **Chrome on your Android device**.
+2. Tap the floating **"📲 Install App"** button that appears on the dock, OR tap the Chrome menu (three dots `⋮`) and select **"Add to Home screen"** / **"Install app"**.
+3. Confirm installation. The app will launch in full-screen standalone mode without any browser URL bars, looking and behaving like a native Android dashboard app!
+
+---
+
+## 📂 Project Architecture
+
+```
+fuel-meter/
+├── index.html                   # HTML5 Entry point
+├── manifest.webmanifest         # PWA Web App Manifest (Android Chrome installable)
+├── sw.js                        # Service Worker for offline caching & background updates
+├── assets/
+│   └── icons/
+│       ├── icon.svg             # Scalable vector icon
+│       ├── favicon.svg          # Browser tab icon
+│       ├── icon-192.png         # 192x192 PWA Android icon
+│       ├── icon-512.png         # 512x512 PWA Splash icon
+│       └── icon-maskable-512.png# Maskable icon for Android adaptive icons
+├── css/
+│   ├── base.css                 # Reset, CSS variables, design tokens & typography
+│   ├── glass.css                # Liquid glass styles, specular highlights, blurs & glows
+│   ├── hud.css                  # Floating top HUD island, speedometer, liquid fuel tube & dock
+│   ├── map.css                  # Fullscreen map, vehicle radar marker & heading chevron
+│   └── modals.css               # Liquid glass modal dialogs, calculators & toasts
+├── js/
+│   ├── app.js                   # Master application bootstrapper & global action coordinator
+│   ├── config.js                # App constants, presets & storage keys
+│   ├── state.js                 # Reactive state store with localStorage persistence & pub/sub
+│   ├── audio.js                 # Web Audio API synthesizer for clicks, chimes & alerts
+│   ├── gps.js                   # Geolocation engine, Haversine formula & demo simulator
+│   ├── map.js                   # Leaflet map manager & custom vehicle marker
+│   ├── trip.js                  # Trip computer & refuel history logger
+│   ├── calculator.js            # Refuel payment to liter converter & pump preview
+│   ├── ui.js                    # UI binder, HUD animator, modal manager & haptics
+│   └── pwa.js                   # Service worker registration & Chrome install prompt handler
+└── README.md
+```
+
+---
+
+## 🔒 Privacy & Local Storage
+* **100% Client-Side:** No telemetry, tracking, or remote database. All GPS calculations occur locally on your device.
+* **Persistent Memory:** Fuel levels, car configurations, and trip logs persist locally in `localStorage`.

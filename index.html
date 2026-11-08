@@ -1,381 +1,318 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gen-2 BUDI Dash</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    
-    <style>
-        :root {
-            --bg-color: #000000;
-            --panel-bg: #111111;
-            --text-primary: #ffffff;
-            --accent: #3498db;
-            --warning: #f1c40f;
-            --danger: #e74c3c;
-            --success: #2ecc71;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Gen-2 Liquid Fuel Meter & HUD</title>
+  
+  <!-- PWA & Mobile Meta Tags -->
+  <meta name="description" content="Floating liquid glass digital Heads-Up Display and real-time GPS fuel tracker.">
+  <meta name="theme-color" content="#070c16">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FuelMeter">
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            margin: 0; padding: 0;
-            height: 100dvh;
-            display: flex; flex-direction: column; overflow: hidden;
-        }
+  <!-- Manifest & Icons -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="./assets/icons/favicon.svg">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-192.png">
 
-        /* --- HUD PANEL --- */
-        .hud-panel {
-            background: var(--panel-bg);
-            padding: 15px;
-            border-bottom: 2px solid #333;
-            z-index: 50; 
-            display: flex; flex-direction: column; gap: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.8);
-        }
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
-        .hud-top { display: flex; justify-content: space-between; align-items: flex-end; }
-        .speed-box { line-height: 0.9; }
-        .speed-val { font-size: 4rem; font-weight: 800; letter-spacing: -3px; font-variant-numeric: tabular-nums; }
-        .speed-unit { font-size: 0.8rem; color: #777; font-weight: bold; margin-left: 5px; }
-        
-        .info-box { text-align: right; }
-        .info-main { font-size: 1.4rem; font-weight: bold; color: #fff; }
-        .info-sub { font-size: 0.9rem; color: #888; margin-top: 2px; }
-
-        .gauge-wrapper {
-            background: #222; height: 12px; border-radius: 6px; overflow: hidden;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
-        }
-        .gauge-bar {
-            height: 100%; width: 50%; background: var(--accent);
-            box-shadow: 0 0 15px var(--accent);
-            transition: width 0.3s ease, background 0.3s;
-        }
-
-        /* --- CONTROLS --- */
-        .controls-grid { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 5px; }
-        
-        .btn-drive {
-            grid-column: 1 / -1; 
-            background: #222; color: white; border: none; padding: 18px;
-            border-radius: 12px; font-weight: bold; font-size: 1.2rem; text-transform: uppercase;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .btn-drive.active { background: var(--danger); box-shadow: 0 0 20px rgba(231, 76, 60, 0.4); }
-
-        .btn-refuel {
-            grid-column: 1; 
-            background: var(--success); color: white; border: none; padding: 15px;
-            border-radius: 10px; font-weight: bold; font-size: 1rem;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            cursor: pointer;
-        }
-
-        .btn-config {
-            grid-column: 2; 
-            width: 60px; background: #222; border: 1px solid #333; color: #777;
-            border-radius: 10px; font-size: 1.5rem; cursor: pointer;
-        }
-
-        /* --- MAP --- */
-        #map-container { flex-grow: 1; background: #000; position: relative; z-index: 1; }
-        #map { width: 100%; height: 100%; }
-        .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
-        .leaflet-control-container .leaflet-top, .leaflet-control-container .leaflet-bottom { display: none; }
-
-        /* --- MODALS --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.9); z-index: 9999;
-            backdrop-filter: blur(5px);
-            display: none; align-items: center; justify-content: center;
-            animation: fadeIn 0.2s;
-        }
-        .modal-overlay.open { display: flex; }
-        @keyframes fadeIn { from {opacity:0} to {opacity:1} }
-
-        .modal-card {
-            background: #1a1a1a; width: 90%; max-width: 350px;
-            padding: 25px; border-radius: 20px; border: 1px solid #333;
-            text-align: center;
-        }
-        
-        .modal-title { font-size: 1.2rem; margin: 0 0 15px 0; color: #fff; }
-
-        /* Calculation Preview Box */
-        .calc-preview {
-            background: #2a2a2a; border-radius: 10px; padding: 15px;
-            margin-bottom: 20px; border: 1px solid #444;
-            text-align: left;
-        }
-        .preview-lbl { font-size: 0.8rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-        .preview-val { font-size: 1.4rem; font-weight: bold; color: var(--accent); }
-        .preview-sub { font-size: 0.9rem; color: #888; }
-
-        input.dark-input {
-            width: 100%; padding: 15px; background: #000; border: 1px solid #333;
-            color: white; border-radius: 10px; font-size: 1.2rem;
-            text-align: center; margin-bottom: 15px; box-sizing: border-box;
-        }
-
-        .btn-row { display: flex; gap: 10px; margin-bottom: 20px; }
-        .btn-opt { flex: 1; padding: 12px; background: #222; border: 1px solid #333; color: #888; border-radius: 8px; cursor: pointer; }
-        .btn-opt.selected { background: var(--accent); color: white; border-color: var(--accent); }
-        
-        .btn-full { width: 100%; padding: 15px; border-radius: 10px; border:none; font-weight:bold; font-size:1rem; cursor: pointer; margin-bottom: 10px;}
-        .bg-green { background: var(--success); color: white; }
-        .bg-grey { background: #333; color: #ccc; }
-        .bg-trans { background: transparent; color: #666; }
-
-    </style>
+  <!-- Liquid Glass Modular Stylesheets -->
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/glass.css">
+  <link rel="stylesheet" href="./css/hud.css">
+  <link rel="stylesheet" href="./css/map.css">
+  <link rel="stylesheet" href="./css/modals.css">
 </head>
 <body>
 
-    <div class="hud-panel">
-        <div class="hud-top">
-            <div class="speed-box">
-                <span class="speed-val" id="speedVal">0</span><span class="speed-unit">KM/H</span>
-            </div>
-            <div class="info-box">
-                <div class="info-main" id="dispLiters">-- L</div>
-                <div class="info-sub" id="dispRange">-- KM</div>
-            </div>
+  <!-- Fullscreen Map Surface -->
+  <div id="map-container">
+    <div id="map"></div>
+  </div>
+
+  <!-- Floating HUD Interface Layer -->
+  <div class="hud-layer">
+    
+    <!-- Top Floating Liquid Glass Island -->
+    <div class="hud-top-island liquid-glass floating">
+      <div class="hud-header-row">
+        <!-- Speedometer -->
+        <div class="speedometer-block">
+          <span class="speed-value" id="speedVal">0</span>
+          <span class="speed-unit">KM/H</span>
         </div>
-        <div class="gauge-wrapper">
-            <div class="gauge-bar" id="gaugeBar"></div>
+
+        <!-- Fuel Remaining & Estimated Range -->
+        <div class="fuel-summary-block">
+          <div class="fuel-main-val" id="fuelLiters">-- L</div>
+          <div class="fuel-range-val" id="fuelRange">~-- KM</div>
         </div>
-        <div class="controls-grid">
-            <button class="btn-drive" id="gpsBtn" onclick="toggleDrive()">
-                <span id="gpsIcon">📍</span> <span id="gpsText">Start Drive</span>
-            </button>
-            <button class="btn-refuel" onclick="openModal('refuelModal')">⛽ Add Fuel</button>
-            <button class="btn-config" onclick="openModal('configModal')">⚙️</button>
+      </div>
+
+      <!-- Status Badges -->
+      <div class="hud-status-strip">
+        <div class="status-badge" id="gpsBadge">GPS WAIT</div>
+        <div class="status-badge" id="wakeBadge" style="display:none;">☀️ AWAKE</div>
+        <div class="status-badge demo-mode-badge" id="demoBadge" style="display:none;">🎮 DEMO DRIVE</div>
+      </div>
+
+      <!-- Liquid Tube Fuel Gauge -->
+      <div class="fuel-tube-wrapper">
+        <div class="fuel-tube-labels">
+          <span>Fuel Level</span>
+          <span id="fuelPercent">--%</span>
         </div>
+        <div class="fuel-tube-track">
+          <div class="fuel-tube-fill" id="fuelFillBar"></div>
+        </div>
+      </div>
+
+      <!-- Trip Computer Mini Drawer -->
+      <div class="trip-stats-drawer liquid-glass">
+        <div class="trip-stat-item">
+          <span class="trip-stat-label">Trip Dist</span>
+          <span class="trip-stat-value" id="tripDistVal">0.0 KM</span>
+        </div>
+        <div class="trip-stat-item">
+          <span class="trip-stat-label">Used</span>
+          <span class="trip-stat-value" id="tripFuelVal">0.00 L</span>
+        </div>
+        <div class="trip-stat-item">
+          <span class="trip-stat-label">Duration</span>
+          <span class="trip-stat-value" id="tripTimeVal">00:00:00</span>
+        </div>
+        <div class="trip-stat-item">
+          <span class="trip-stat-label">Avg Spd</span>
+          <span class="trip-stat-value" id="tripAvgVal">0 KM/H</span>
+        </div>
+      </div>
     </div>
 
-    <div id="map-container"><div id="map"></div></div>
+    <!-- Bottom Floating Control Dock -->
+    <div class="hud-bottom-dock">
+      <!-- Primary Drive Toggle Button -->
+      <button class="btn-drive-primary liquid-glass" id="btnDrive" onclick="toggleDrive()">
+        <span class="drive-icon" id="btnDriveIcon">📍</span>
+        <span id="btnDriveText">START DRIVE</span>
+      </button>
 
-    <div class="modal-overlay" id="refuelModal">
-        <div class="modal-card">
-            <h3 class="modal-title">Enter Payment Amount</h3>
-            
-            <input type="number" id="manualRM" class="dark-input" placeholder="e.g. 50" oninput="updateCalc()">
-            
-            <div class="btn-row">
-                <button class="btn-opt selected" id="btnBudi" onclick="setPrice(1.99, 'btnBudi')">BUDI (1.99)</button>
-                <button class="btn-opt" id="btnStd" onclick="setPrice(2.60, 'btnStd')">STD (2.60)</button>
-            </div>
+      <!-- Secondary Floating Quick Actions -->
+      <div class="secondary-dock-row">
+        <!-- Refuel -->
+        <button class="liquid-btn btn-refuel-dock" onclick="openModal('refuelModal')">
+          <span>⛽</span> Add Fuel
+        </button>
 
-            <div class="calc-preview">
-                <div class="preview-lbl">⛽ Pump Should Show:</div>
-                <div class="preview-val" id="prevRM">RM 0.00</div>
-                <div class="preview-sub" id="prevLiters">0.0 Liters</div>
-            </div>
-            
-            <button class="btn-full bg-green" onclick="addFuel()">Confirm Fuel Added</button>
-            <button class="btn-full bg-grey" onclick="fullTank()">Set FULL TANK (50L)</button>
-            <button class="btn-full bg-trans" onclick="closeModal('refuelModal')">Cancel</button>
-        </div>
+        <!-- Trip Log -->
+        <button class="liquid-btn liquid-btn-icon" title="Trip Stats & Refuel History" onclick="openModal('tripModal')">
+          📊
+        </button>
+
+        <!-- Recenter Map -->
+        <button class="liquid-btn liquid-btn-icon" title="Recenter Vehicle" onclick="recenterMap()">
+          🧭
+        </button>
+
+        <!-- Demo Drive Simulation -->
+        <button class="liquid-btn liquid-btn-icon" title="Demo Drive Mode" onclick="toggleSimulation()">
+          🎮
+        </button>
+
+        <!-- Fullscreen -->
+        <button class="liquid-btn liquid-btn-icon" title="Toggle Fullscreen" onclick="toggleFullscreen()">
+          ⛶
+        </button>
+
+        <!-- Settings -->
+        <button class="liquid-btn liquid-btn-icon" title="Vehicle Settings" onclick="openModal('configModal')">
+          ⚙️
+        </button>
+
+        <!-- PWA Install Button (surfaced by Android Chrome) -->
+        <button class="liquid-btn btn-install-pwa" id="btnInstallApp" title="Install to Home Screen">
+          📲 Install App
+        </button>
+      </div>
     </div>
 
-    <div class="modal-overlay" id="configModal">
-        <div class="modal-card">
-            <h3 class="modal-title">Car Settings</h3>
-            <label style="color:#aaa; display:block; margin-bottom:5px;">Tank Size (L)</label>
-            <input type="number" id="confTank" class="dark-input" placeholder="50">
-            <label style="color:#aaa; display:block; margin-bottom:5px;">Efficiency (KM/L)</label>
-            <input type="number" id="confEff" class="dark-input" placeholder="11">
-            <button class="btn-full bg-green" onclick="saveConfig()">Save Settings</button>
-            <button class="btn-full bg-trans" onclick="closeModal('configModal')">Cancel</button>
+  </div>
+
+  <!-- ==========================================================================
+       Liquid Glass Modal Dialogs
+       ========================================================================== -->
+
+  <!-- 1. Refuel Modal -->
+  <div class="modal-overlay" id="refuelModal">
+    <div class="modal-window liquid-glass">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon">⛽</span>
+          <h3 class="modal-title">Log Refuel</h3>
         </div>
+        <button class="modal-close-btn" onclick="closeModal('refuelModal')">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="inputPaymentRM">Payment Amount (RM)</label>
+        <div class="glass-input-wrapper">
+          <span class="glass-input-prefix">RM</span>
+          <input type="number" id="inputPaymentRM" class="glass-input" placeholder="50" step="any" inputmode="decimal">
+        </div>
+      </div>
+
+      <!-- Quick Chips -->
+      <div class="quick-chips-row">
+        <button class="quick-chip" data-amount="20">+RM20</button>
+        <button class="quick-chip" data-amount="30">+RM30</button>
+        <button class="quick-chip" data-amount="50">+RM50</button>
+        <button class="quick-chip" data-amount="70">+RM70</button>
+        <button class="quick-chip" data-amount="100">+RM100</button>
+      </div>
+
+      <!-- Fuel Price Rate Pills -->
+      <div class="form-group">
+        <label class="form-label">Price Rate (RM / L)</label>
+        <div class="price-segmented-grid">
+          <button class="price-pill-btn selected" id="rateBudi" onclick="selectPrice(1.99, this)">
+            <span class="price-pill-name">BUDI</span>
+            <span class="price-pill-rate">1.99</span>
+          </button>
+          <button class="price-pill-btn" id="rateRon95" onclick="selectPrice(2.05, this)">
+            <span class="price-pill-name">RON95</span>
+            <span class="price-pill-rate">2.05</span>
+          </button>
+          <button class="price-pill-btn" id="rateStd" onclick="selectPrice(2.60, this)">
+            <span class="price-pill-name">STD</span>
+            <span class="price-pill-rate">2.60</span>
+          </button>
+          <button class="price-pill-btn" id="rateRon97" onclick="selectPrice(3.19, this)">
+            <span class="price-pill-name">RON97</span>
+            <span class="price-pill-rate">3.19</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Gas Pump Meter Calculation Preview -->
+      <div class="pump-preview-box">
+        <div class="pump-preview-title">
+          <span>⛽</span> Pump Screen Shows:
+        </div>
+        <div class="pump-preview-values">
+          <span class="pump-display-rm" id="previewPumpRM">RM 0.00</span>
+          <span class="pump-display-liters" id="previewLiters">0.0 Liters</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="modal-actions">
+        <button class="btn-confirm-action" onclick="confirmRefuel()">Confirm Fuel Added</button>
+        <button class="btn-secondary-action" onclick="confirmFullTank()">Set Full Tank (100%)</button>
+      </div>
     </div>
+  </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- 2. Vehicle Settings Modal -->
+  <div class="modal-overlay" id="configModal">
+    <div class="modal-window liquid-glass">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon">⚙️</span>
+          <h3 class="modal-title">Vehicle Settings</h3>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('configModal')">✕</button>
+      </div>
 
-    <script>
-        // --- DATA ---
-        let state = { fuel: 25, tankMax: 50, eff: 11, price: 1.99 };
-        const MARKET_RATE = 2.60; // The actual rate at the pump screen
+      <div class="form-group">
+        <label class="form-label" for="confTank">Tank Capacity (Liters)</label>
+        <input type="number" id="confTank" class="glass-input no-prefix" placeholder="50" min="1" step="any">
+      </div>
 
-        let tracking = false;
-        let watchId, wakeLock;
-        let map, marker;
-        let lastLat = null, lastLon = null;
+      <div class="form-group">
+        <label class="form-label" for="confEff">Fuel Efficiency (KM / Liter)</label>
+        <input type="number" id="confEff" class="glass-input no-prefix" placeholder="11" min="0.1" step="any">
+      </div>
 
-        // --- INIT ---
-        window.onload = () => {
-            loadState();
-            initMap();
-            updateUI();
-        };
+      <div class="setting-item-row">
+        <div class="setting-info">
+          <span class="setting-title">Futuristic Audio FX</span>
+          <span class="setting-desc">Tactile clicks, refuel chimes & alerts</span>
+        </div>
+        <label class="glass-switch">
+          <input type="checkbox" id="switchSound" checked>
+          <span class="glass-slider"></span>
+        </label>
+      </div>
 
-        function loadState() {
-            if(localStorage.getItem('g7_fuel')) state.fuel = parseFloat(localStorage.getItem('g7_fuel'));
-            if(localStorage.getItem('g7_tank')) state.tankMax = parseFloat(localStorage.getItem('g7_tank'));
-            if(localStorage.getItem('g7_eff')) state.eff = parseFloat(localStorage.getItem('g7_eff'));
+      <div class="setting-item-row">
+        <div class="setting-info">
+          <span class="setting-title">Screen Wake Lock</span>
+          <span class="setting-desc">Keeps screen awake while driving</span>
+        </div>
+        <label class="glass-switch">
+          <input type="checkbox" id="switchWake" checked>
+          <span class="glass-slider"></span>
+        </label>
+      </div>
 
-            document.getElementById('confTank').value = state.tankMax;
-            document.getElementById('confEff').value = state.eff;
-        }
+      <div class="setting-item-row">
+        <div class="setting-info">
+          <span class="setting-title">Haptic Vibration</span>
+          <span class="setting-desc">Subtle tactile pulses on button press</span>
+        </div>
+        <label class="glass-switch">
+          <input type="checkbox" id="switchHaptic" checked>
+          <span class="glass-slider"></span>
+        </label>
+      </div>
 
-        function saveData() {
-            localStorage.setItem('g7_fuel', state.fuel.toFixed(4));
-            localStorage.setItem('g7_tank', state.tankMax);
-            localStorage.setItem('g7_eff', state.eff);
-        }
+      <div class="modal-actions">
+        <button class="btn-confirm-action" onclick="saveSettings()">Save Vehicle Config</button>
+      </div>
+    </div>
+  </div>
 
-        // --- UI UPDATES ---
-        function updateUI() {
-            if(state.fuel < 0) state.fuel = 0;
-            if(state.fuel > state.tankMax) state.fuel = state.tankMax;
-            saveData();
+  <!-- 3. Trip Stats & Refuel History Modal -->
+  <div class="modal-overlay" id="tripModal">
+    <div class="modal-window liquid-glass">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon">📊</span>
+          <h3 class="modal-title">Trip & Refuel History</h3>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('tripModal')">✕</button>
+      </div>
 
-            const pct = (state.fuel / state.tankMax) * 100;
-            const range = state.fuel * state.eff;
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <span class="form-label">Current Trip</span>
+        <button class="quick-chip" style="flex:none; padding:4px 10px; font-size:0.75rem;" onclick="resetCurrentTrip()">Reset Trip</button>
+      </div>
 
-            document.getElementById('dispLiters').innerText = state.fuel.toFixed(1) + " L";
-            document.getElementById('dispRange').innerText = "~" + range.toFixed(0) + " KM";
-            
-            const bar = document.getElementById('gaugeBar');
-            bar.style.width = pct + "%";
-            if(pct < 15) bar.style.background = "var(--danger)";
-            else if(pct < 30) bar.style.background = "var(--warning)";
-            else bar.style.background = "var(--accent)";
-            bar.style.boxShadow = `0 0 15px ${bar.style.background}`;
-        }
+      <div class="form-group">
+        <span class="form-label" style="margin-top:6px;">Past Refuel Records</span>
+        <div id="refuelLogsList" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
 
-        // --- MODALS ---
-        function openModal(id) { document.getElementById(id).classList.add('open'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+      <div class="modal-actions">
+        <button class="btn-secondary-action" onclick="closeModal('tripModal')">Close</button>
+      </div>
+    </div>
+  </div>
 
-        // --- CALCULATOR LOGIC ---
-        function setPrice(p, id) {
-            state.price = p;
-            document.querySelectorAll('.btn-opt').forEach(b => b.classList.remove('selected'));
-            document.getElementById(id).classList.add('selected');
-            updateCalc(); // Recalculate preview when price toggles
-        }
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
 
-        function updateCalc() {
-            const payRM = parseFloat(document.getElementById('manualRM').value) || 0;
-            const prevRM = document.getElementById('prevRM');
-            const prevLiters = document.getElementById('prevLiters');
+  <!-- Leaflet Map Script -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-            if(payRM > 0) {
-                // 1. Calculate how many Liters you GET for your money
-                const litersReceived = payRM / state.price;
+  <!-- ES Module Application Entrypoint -->
+  <script type="module" src="./js/app.js"></script>
 
-                // 2. Calculate what the PUMP SCREEN shows (Market Rate)
-                const pumpDisplayRM = litersReceived * MARKET_RATE;
-
-                prevRM.innerText = "RM " + pumpDisplayRM.toFixed(2);
-                prevLiters.innerText = litersReceived.toFixed(1) + " Liters";
-                
-                // Visual cue if BUDI is on
-                if(state.price < MARKET_RATE) {
-                    prevRM.style.color = "var(--success)"; // Green text indicating value
-                } else {
-                    prevRM.style.color = "var(--accent)"; // Standard blue
-                }
-            } else {
-                prevRM.innerText = "RM 0.00";
-                prevLiters.innerText = "0.0 Liters";
-            }
-        }
-
-        function addFuel() {
-            const payRM = parseFloat(document.getElementById('manualRM').value);
-            if(payRM > 0) {
-                // Add the calculated liters
-                state.fuel += (payRM / state.price);
-                
-                document.getElementById('manualRM').value = "";
-                updateCalc(); // Reset preview
-                closeModal('refuelModal');
-                updateUI();
-            }
-        }
-
-        function fullTank() {
-            if(confirm("Confirm Full Tank?")) {
-                state.fuel = state.tankMax;
-                closeModal('refuelModal');
-                updateUI();
-            }
-        }
-
-        function saveConfig() {
-            const t = parseFloat(document.getElementById('confTank').value);
-            const e = parseFloat(document.getElementById('confEff').value);
-            if(t > 0 && e > 0) {
-                state.tankMax = t; state.eff = e;
-                updateUI();
-                closeModal('configModal');
-            }
-        }
-
-        // --- GPS ENGINE ---
-        function initMap() {
-            map = L.map('map', { zoomControl:false, dragging:false, touchZoom:false, scrollWheelZoom:false }).setView([4.2105, 101.9758], 15);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
-            const icon = L.divIcon({ className: 'car', html: '<div style="width:24px;height:24px;background:#3498db;border:4px solid white;border-radius:50%;box-shadow:0 0 15px #3498db;"></div>', iconSize:[32,32], iconAnchor:[16,16] });
-            marker = L.marker([0,0], {icon: icon});
-        }
-
-        async function toggleDrive() {
-            const btn = document.getElementById('gpsBtn');
-            const txt = document.getElementById('gpsText');
-            
-            if(!tracking) {
-                // START
-                if(!navigator.geolocation) return alert("GPS Required");
-                try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
-                
-                tracking = true;
-                btn.classList.add('active'); txt.innerText = "STOP DRIVE";
-                
-                watchId = navigator.geolocation.watchPosition(pos => {
-                    const { latitude: lat, longitude: lon, speed } = pos.coords;
-                    
-                    let kmh = (speed || 0) * 3.6;
-                    document.getElementById('speedVal').innerText = kmh.toFixed(0);
-
-                    const loc = new L.LatLng(lat, lon);
-                    if(!map.hasLayer(marker)) marker.addTo(map);
-                    marker.setLatLng(loc);
-                    map.setView(loc, 17);
-
-                    if(lastLat && kmh > 3) {
-                        const dist = getDist(lastLat, lastLon, lat, lon);
-                        if(dist > 0.002 && dist < 0.5) {
-                            state.fuel -= (dist / state.eff);
-                            updateUI();
-                        }
-                    }
-                    lastLat = lat; lastLon = lon;
-                }, err => console.log(err), { enableHighAccuracy: true });
-
-            } else {
-                // STOP
-                tracking = false;
-                navigator.geolocation.clearWatch(watchId);
-                if(wakeLock) wakeLock.release();
-                btn.classList.remove('active'); txt.innerText = "START DRIVE";
-                document.getElementById('speedVal').innerText = "0";
-            }
-        }
-
-        function getDist(lat1,lon1,lat2,lon2) {
-            const R=6371, dLat=d2r(lat2-lat1), dLon=d2r(lon2-lon1); 
-            const a=Math.sin(dLat/2)**2 + Math.cos(d2r(lat1))*Math.cos(d2r(lat2))*Math.sin(dLon/2)**2; 
-            return R*(2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
-        }
-        const d2r = d => d*(Math.PI/180);
-
-    </script>
 </body>
 </html>

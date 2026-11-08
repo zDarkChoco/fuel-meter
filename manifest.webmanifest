@@ -1,0 +1,54 @@
+{
+  "name": "Gen-2 Liquid Fuel Meter & HUD",
+  "short_name": "FuelMeter",
+  "description": "Smart floating liquid-glass Heads-Up Display and real-time GPS fuel tracker",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#070c16",
+  "background_color": "#03070d",
+  "categories": ["utilities", "navigation", "auto"],
+  "icons": [
+    {
+      "src": "./assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Start Drive",
+      "short_name": "Drive",
+      "description": "Begin GPS fuel tracking",
+      "url": "./index.html?action=drive",
+      "icons": [{ "src": "./assets/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Add Fuel",
+      "short_name": "Refuel",
+      "description": "Log refuel payment",
+      "url": "./index.html?action=refuel",
+      "icons": [{ "src": "./assets/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

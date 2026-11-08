@@ -1,0 +1,416 @@
+/* ==========================================================================
+   Liquid Glass Modals, Sheets, and Notifications
+   ========================================================================== */
+
+/* Fullscreen Modal Backdrop Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 13, 0.75);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--safe-top) + 16px) calc(var(--safe-right) + 16px) calc(var(--safe-bottom) + 16px) calc(var(--safe-left) + 16px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s var(--trans-smooth);
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Liquid Glass Modal Card */
+.modal-window {
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 30px;
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  transform: translateY(20px) scale(0.96);
+  transition: transform 0.35s var(--trans-spring);
+}
+
+.modal-overlay.open .modal-window {
+  transform: translateY(0) scale(1);
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--glass-border-subtle);
+  padding-bottom: 12px;
+}
+
+.modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-icon {
+  font-size: 1.5rem;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+}
+
+.modal-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-dim);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+/* Form Groups & Inputs */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+
+.glass-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.glass-input-prefix {
+  position: absolute;
+  left: 16px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--neon-cyan);
+  pointer-events: none;
+}
+
+.glass-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 16px 16px 16px 52px;
+  color: #ffffff;
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.glass-input.no-prefix {
+  padding-left: 16px;
+  font-size: 1.15rem;
+}
+
+.glass-input:focus {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 16px rgba(0, 242, 254, 0.35);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Quick Payment Chips */
+.quick-chips-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quick-chip {
+  flex: 1;
+  min-width: 60px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: 12px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.quick-chip:hover, .quick-chip:active {
+  background: rgba(0, 242, 254, 0.2);
+  border-color: var(--neon-cyan);
+  color: #ffffff;
+}
+
+/* Fuel Price Toggle Segmented Buttons */
+.price-segmented-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 8px;
+}
+
+.price-pill-btn {
+  padding: 10px 8px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-dim);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s var(--trans-spring);
+}
+
+.price-pill-name {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.price-pill-rate {
+  font-size: 1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.price-pill-btn.selected {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.35) 0%, rgba(0, 114, 255, 0.2) 100%);
+  border-color: var(--neon-cyan);
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Calculation Preview Box (Pump Screen Simulation) */
+.pump-preview-box {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(9, 20, 34, 0.8) 100%);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.pump-preview-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pump-preview-values {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.pump-display-rm {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--neon-emerald);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+}
+
+.pump-display-liters {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--neon-cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Modal Action Buttons */
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.btn-confirm-action {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, rgba(0, 245, 160, 0.8) 0%, rgba(0, 198, 255, 0.7) 100%);
+  color: #03070d;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 245, 160, 0.35);
+  transition: all 0.2s var(--trans-spring);
+}
+
+.btn-confirm-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 245, 160, 0.5);
+}
+
+.btn-secondary-action {
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary-action:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Toggle Switches */
+.setting-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.setting-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.setting-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.setting-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* Custom Glass Switch */
+.glass-switch {
+  position: relative;
+  width: 52px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.glass-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.glass-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  transition: 0.3s;
+}
+
+.glass-slider::before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: 0.3s var(--trans-spring);
+}
+
+.glass-switch input:checked + .glass-slider {
+  background: var(--neon-cyan);
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.5);
+}
+
+.glass-switch input:checked + .glass-slider::before {
+  transform: translateX(22px);
+  background: #03070d;
+}
+
+/* Floating Toast Notification */
+.toast-container {
+  position: fixed;
+  top: calc(var(--safe-top) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  width: 90%;
+  max-width: 360px;
+}
+
+.glass-toast {
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(14, 25, 42, 0.9);
+  backdrop-filter: var(--blur-md);
+  border: 1px solid var(--neon-cyan);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 242, 254, 0.3);
+  color: #ffffff;
+  animation: toastIn 0.35s var(--trans-spring);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-16px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
